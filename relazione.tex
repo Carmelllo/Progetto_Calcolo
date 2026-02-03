@@ -1,0 +1,147 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{helvet}
+\usepackage{hyperref}
+\usepackage{bookmark}
+\usepackage{framed}
+\usepackage{listings}
+\usepackage{mdframed}
+\usepackage{sectsty}
+\usepackage{tikz}
+\usepackage{geometry}
+\geometry{a4paper,margin=2.5cm}
+
+
+\graphicspath{{img/}}
+
+\newcommand{\abs}[1]{\left|#1\right|}
+
+\sectionfont{\fontsize{10}{12}\selectfont}
+\subsectionfont{\fontsize{10}{12}\selectfont}
+\subsubsectionfont{\fontsize{10}{12}\selectfont}
+
+\lstset{
+  language=Matlab,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  frame=single,
+  breaklines=true,
+  keepspaces=true,
+  showspaces=false,
+  showstringspaces=false
+}
+
+\begin{document}
+
+% ===================== TITOLO =====================
+\begin{titlepage}
+  \centering
+  {\Huge \textbf{Università degli Studi di Padova}\par}
+  \vspace{1cm}
+  \begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.45\textwidth]{logo_unipd.png}
+  \end{figure}
+  \vspace{1.5cm}
+  {\LARGE \textbf{Relazione sul:}\par}
+  {\Huge \textbf{Calcolo delle sequenze di Leja ed uso per l'interpolazione}\par}
+  \vfill
+  \textbf{Realizzata da:}\par
+  Carmelo Russello, matricola 2076421;\par
+  Mario De Pasquale, matricola 2076433\par
+  \vspace{0.5cm}
+  \textbf{Corso:} Calcolo Numerico\par
+  \vspace{0.2cm}
+  \textbf{Data:} \today
+\end{titlepage}
+
+\renewcommand{\familydefault}{\sfdefault}
+\fontsize{10}{12}\selectfont
+
+% ===================== INTRO =====================
+\section{Introduzione}
+Il progetto ha come obiettivo lo sviluppo di un metodo per l'interpolazione polinomiale su $[-1, 1]$ basato su punti di Leja approssimati, estratti da una mesh fitta. Verrà calcolata la costante di Lebesgue per analizzare la stabilità del metodo e confrontata l'accuratezza dell'interpolante con quella ottenuta utilizzando nodi equispaziati.
+
+L'interpolante è definito su una base di Chebyshev di primo tipo:
+\[
+V_{ij} = \cos((j-1) \arccos(z_i)), \quad i = 1, \dots, d+1, \quad j = 1, \dots, d+1,
+\]
+e i coefficienti vengono determinati risolvendo il sistema lineare $Vc = f(z)$ tramite l'operatore \texttt{\textbackslash} di MATLAB, evitando l'uso di \texttt{polyfit}.
+
+\section{Calcolo dei punti di Leja}
+
+\subsection{Algoritmo 1: DLP}
+L'algoritmo 1 calcola i punti di Leja approssimati iterativamente. Sia $x$ il vettore dei punti della mesh equispaziati in $[-1, 1]$ e $d$ il grado del polinomio interpolante. Il numero di nodi da estrarre è $n = d+1$. 
+
+Il primo nodo è definito come il primo elemento della mesh, $dlp_1 = x_1$. Per ogni nodo successivo $dlp_k$, con $k = 2, \dots, n$, si calcola la produttoria:
+\[
+    \prod_{j=1}^{k-1} |x - dlp_j|,
+\]
+e si seleziona il punto della mesh che massimizza questa produttoria. Il risultato è il vettore $dlp$ contenente i nodi di Leja approssimati.
+
+\subsection{Algoritmo 2: DLP2}
+L'algoritmo 2 calcola i punti di Leja approssimati utilizzando la fattorizzazione LU della matrice di Vandermonde di Chebyshev. Sia $x$ il vettore dei punti della mesh in $[-1, 1]$ e $d$ il grado del polinomio interpolante. Il numero di nodi da estrarre è $n = d+1$. 
+
+La matrice di Vandermonde di Chebyshev $V$ è costruita come:
+\[
+    V_{ij} = \cos((j-1) \arccos(x_i)), \quad i = 1, \dots, M, \quad j = 1, \dots, n,
+\]
+dove $M$ è il numero di punti della mesh. Si esegue la fattorizzazione LU con pivoting su $V$ e si estraggono i nodi di Leja approssimati dai pivot della fattorizzazione. Il risultato è il vettore $dlp$ contenente i nodi di Leja approssimati.
+
+\section{Calcolo della costante di Lebesgue}
+La costante di Lebesgue $\Lambda_n$ per i punti di Leja viene calcolata come:
+\[
+\Lambda_n = \max_{x \in [-1, 1]} \sum_{i=0}^{n} |l_i(x)|,
+\]
+dove $l_i(x)$ sono i polinomi di Lagrange associati ai punti di Leja.
+
+\subsection{Calcolo della costante di Lebesgue}
+La costante di Lebesgue, indicata con $L$, misura la stabilità dell'interpolazione polinomiale. 
+
+Siano $z_0, \dots, z_n$ i nodi di interpolazione e $x$ un insieme di punti in cui valutare la funzione di Lebesgue. Per ogni nodo $z_i$, si definisce il polinomio di Lagrange $l_i(x)$ come:
+\[
+    l_i(x) = \prod_{j \neq i} \frac{x - z_j}{z_i - z_j}.
+\]
+La funzione di Lebesgue $\lambda(x)$ è data dalla somma dei valori assoluti dei polinomi di Lagrange:
+\[
+    \lambda(x) = \sum_{i=0}^n |l_i(x)|.
+\]
+La costante di Lebesgue è quindi definita come il massimo della funzione $\lambda(x)$:
+\[
+    L = \max \lambda(x).
+\]
+\section{MATLAB}
+Il codice MATLAB sviluppato per questo progetto include le funzioni per calcolare i punti di Leja approssimati, la costante di Lebesgue e l'interpolazione polinomiale. Le funzioni principali sono:
+\begin{itemize}
+    \item \texttt{dlp}: Funzione che calcola i punti di Leja approssimati iterativamente, massimizzando la produttoria dei valori assoluti delle differenze tra i punti della mesh e i nodi già scelti.
+    \item \texttt{dlp2}: Funzione che calcola i punti di Leja approssimati utilizzando la fattorizzazione LU della matrice di Vandermonde di Chebyshev.
+    \item \texttt{leb\_con}: Funzione che calcola la costante di Lebesgue, definita come il massimo della somma dei valori assoluti dei polinomi di Lagrange associati ai nodi di interpolazione.
+    \item \texttt{main\_experiment}: Script principale che esegue esperimenti sulle sequenze di Leja, calcola le costanti di Lebesgue, il tempo computazionale e l'errore di interpolazione. Include la generazione di grafici per confrontare nodi di Leja e nodi equispaziati.
+\end{itemize}
+\section{Sperimentazione}
+La sezione di sperimentazione descrive il setup matematico utilizzato per analizzare le sequenze di Leja e confrontarle con i nodi equispaziati. 
+
+\subsection{Setup Matematico}
+Sia $x_{leja}$ una mesh uniforme in $[-1, 1]$ composta da $M_{leja} = 100000$ punti, utilizzata per estrarre i nodi di Leja. Sia $x_{eval}$ una mesh uniforme in $[-1, 1]$ composta da $M_{eval} = 2001$ punti, utilizzata per valutare la funzione di Lebesgue e l'errore di interpolazione. 
+
+I gradi del polinomio considerati sono $d = 1, \dots, 50$, con $n = d+1$ nodi per ogni grado. La funzione di test scelta è:
+\[
+    f(x) = \frac{1}{x - 1.3},
+\]
+che presenta una singolarità al di fuori dell'intervallo di interpolazione.
+
+Per ogni grado $d$, vengono calcolati:
+\begin{itemize}
+    \item La costante di Lebesgue $\Lambda_n$ per i nodi di Leja (Algoritmi \texttt{dlp} e \texttt{dlp2}).
+    \item La costante di Lebesgue $\Lambda_n$ per i nodi equispaziati.
+    \item L'errore massimo di interpolazione per i nodi di Leja e i nodi equispaziati.
+    \item Il tempo computazionale richiesto dagli algoritmi \texttt{dlp} e \texttt{dlp2}.
+\end{itemize}
+\end{document}
